@@ -1,1 +1,1 @@
-from .experiment_config import ExperimentConfig
+from .condition import Condition
