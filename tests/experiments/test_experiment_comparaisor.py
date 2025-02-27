@@ -30,7 +30,7 @@ def mock_experiments():
         ]
 
         # Create experiment
-        experiment = Experiment(config=config, evaluations=metrics)
+        experiment = Experiment(config=config, metrics=metrics)
         experiments.append(experiment)
 
     return experiments
@@ -202,7 +202,7 @@ def test_experiment_with_missing_metric(mock_experiments):
         Metric(experiment_id="exp_missing", name="accuracy", value=0.9)
         # Missing f1_score and precision
     ]
-    exp_missing = Experiment(config=config, evaluations=metrics)
+    exp_missing = Experiment(config=config, metrics=metrics)
 
     # Add to experiments and create new comparison
     experiments_with_missing = mock_experiments + [exp_missing]
@@ -228,8 +228,8 @@ def test_experiments_with_different_config_parameters():
     metrics1 = [Metric(experiment_id="exp_A", name="accuracy", value=0.9)]
     metrics2 = [Metric(experiment_id="exp_B", name="accuracy", value=0.8)]
 
-    exp1 = Experiment(config=config1, evaluations=metrics1)
-    exp2 = Experiment(config=config2, evaluations=metrics2)
+    exp1 = Experiment(config=config1, metrics=metrics1)
+    exp2 = Experiment(config=config2, metrics=metrics2)
 
     comparison = ExperimentComparison([exp1, exp2])
     df = comparison.df
@@ -252,8 +252,8 @@ def test_experiments_with_different_metrics():
     metrics1 = [Metric(experiment_id="exp_C", name="accuracy", value=0.9)]
     metrics2 = [Metric(experiment_id="exp_D", name="f1_score", value=0.8)]
 
-    exp1 = Experiment(config=config1, evaluations=metrics1)
-    exp2 = Experiment(config=config2, evaluations=metrics2)
+    exp1 = Experiment(config=config1, metrics=metrics1)
+    exp2 = Experiment(config=config2, metrics=metrics2)
 
     comparison = ExperimentComparison([exp1, exp2])
     df = comparison.df
@@ -276,8 +276,8 @@ def test_filter_with_contains_operator():
     metrics1 = [Metric(experiment_id="exp_model_A", name="accuracy", value=0.9)]
     metrics2 = [Metric(experiment_id="exp_model_B", name="accuracy", value=0.8)]
 
-    exp1 = Experiment(config=config1, evaluations=metrics1)
-    exp2 = Experiment(config=config2, evaluations=metrics2)
+    exp1 = Experiment(config=config1, metrics=metrics1)
+    exp2 = Experiment(config=config2, metrics=metrics2)
 
     comparison = ExperimentComparison([exp1, exp2])
 

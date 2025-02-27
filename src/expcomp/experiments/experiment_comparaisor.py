@@ -36,7 +36,7 @@ class ExperimentComparison:
                 row_data[f"config_{key}"] = value
 
             # Flatten metric values, prefixing with 'metric_'
-            for metric in experiment.evaluations:
+            for metric in experiment.metrics:
                 # The metric's name becomes the column name
                 col_name = f"metric_{metric.name}"
                 row_data[col_name] = metric.value
