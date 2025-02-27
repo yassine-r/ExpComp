@@ -1,6 +1,6 @@
 [project]
 name = "expcomp"
-version = "0.1.0"
+version = "1.0.0"
 description = ""
 authors = [
     {name = "yassine rachidy",email = "ya.rachidy@gmail.com"}
@@ -16,6 +16,10 @@ packages = [{include = "expcomp", from = "src"}]
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.3.4"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^25.1.0"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

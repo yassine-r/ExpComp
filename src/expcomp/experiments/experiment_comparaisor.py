@@ -14,7 +14,7 @@ class ExperimentComparison:
         """
         Create a pandas DataFrame that aggregates experiment configurations
         and their associated metrics in a tabular format.
-        
+
         Returns:
             A pandas DataFrame with one row per Experiment. Config parameters
             are prefixed with 'config_' and metrics with 'metric_'.
@@ -48,10 +48,10 @@ class ExperimentComparison:
     def filter_experiments(self, conditions: List[Condition]) -> pd.DataFrame:
         """
         Filter the comparison DataFrame by applying a list of Condition objects.
-        
+
         Args:
             conditions: A list of Condition objects to apply sequentially.
-        
+
         Returns:
             A filtered pandas DataFrame that satisfies all the conditions.
         """
@@ -63,11 +63,11 @@ class ExperimentComparison:
     def sort_by_metric(self, metric_name: str, ascending: bool = True) -> pd.DataFrame:
         """
         Sort the comparison DataFrame by the specified metric column.
-        
+
         Args:
             metric_name: The metric name to sort by (e.g., 'accuracy').
             ascending: If True, sort in ascending order; otherwise, descending.
-        
+
         Returns:
             A sorted pandas DataFrame.
         """

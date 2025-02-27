@@ -5,3 +5,6 @@ __pycache__
 /dist
 # IDE configuration
 /.vscode/*
+
+/trials/*
+/notebooks/*
