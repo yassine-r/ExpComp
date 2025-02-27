@@ -20,6 +20,10 @@ pytest = "^8.3.4"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
+wandb = "^0.19.7"
+pandas = "^2.2.3"
+pyaml = "^25.1.0"
+loguru = {version = "^0.7.3", python = ">=3.11,<4.0"}
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
