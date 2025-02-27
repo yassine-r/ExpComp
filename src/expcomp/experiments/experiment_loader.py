@@ -128,6 +128,8 @@ class ExperimentLoader:
                         metrics_list = [metrics_data] if metrics_data else []
 
                 # 4) Create ExperimentConfig
+                if "id" not in config_dict:
+                    config_dict["id"] = exp_dir.name
                 experiment_config = ExperimentConfig(**config_dict)
                 logger.debug(f"Created config with ID: {experiment_config.id}")
 
