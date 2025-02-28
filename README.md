@@ -22,9 +22,14 @@ pip install expcomp
 ### Creating Dummy Experiments
 
 ```python
-
 import random
 import json
+
+from expcomp import Condition
+from expcomp.evaluation import Metric
+from expcomp.experiments import Experiment, ExperimentComparison, ExperimentConfig, ExperimentLoader
+
+
 
 def generate_experiment_config(exp_id):
     """Generate a dummy experiment configuration with random parameters."""
@@ -126,9 +131,6 @@ generate_dummy_experiments()
 
 ### Loading & Analyzing Experiments
 ```python
-from expcomp import Condition
-from expcomp.evaluation import Metric
-from expcomp.experiments import Experiment, ExperimentComparison, ExperimentConfig, ExperimentLoader
 
 # Load experiments from directory
 all_experiments = ExperimentLoader.from_directory(
