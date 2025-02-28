@@ -6,5 +6,5 @@ __pycache__
 # IDE configuration
 /.vscode/*
 
-/trials/*
+/experiments/*
 /notebooks/*

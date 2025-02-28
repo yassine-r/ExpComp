@@ -1,6 +1,6 @@
 [project]
 name = "expcomp"
-version = "1.0.0"
+version = "1.1.0"
 description = ""
 authors = [
     {name = "yassine rachidy",email = "ya.rachidy@gmail.com"}
@@ -24,6 +24,7 @@ wandb = "^0.19.7"
 pandas = "^2.2.3"
 pyaml = "^25.1.0"
 loguru = {version = "^0.7.3", python = ">=3.11,<4.0"}
+ipykernel = "^6.29.5"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
