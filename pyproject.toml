@@ -1,18 +1,20 @@
 [project]
 name = "expcomp"
-version = "1.1.0"
+version = "1.1.3"
 description = ""
 authors = [
     {name = "yassine rachidy",email = "ya.rachidy@gmail.com"}
 ]
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = [
-]
 
 [tool.poetry]
 packages = [{include = "expcomp", from = "src"}]
 
+[tool.poetry.dependencies]
+pandas = ">=2.0.0"
+pyaml = ">=25.0.0"
+loguru = { version = "^0.7.3", python = ">=3.11,<4.0" }
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.3.4"
@@ -20,10 +22,6 @@ pytest = "^8.3.4"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
-wandb = "^0.19.7"
-pandas = "^2.2.3"
-pyaml = "^25.1.0"
-loguru = {version = "^0.7.3", python = ">=3.11,<4.0"}
 ipykernel = "^6.29.5"
 
 [build-system]
