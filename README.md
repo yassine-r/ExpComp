@@ -126,7 +126,9 @@ generate_dummy_experiments()
 
 ### Loading & Analyzing Experiments
 ```python
-from expcomp.experiments import ExperimentLoader, ExperimentComparison
+from expcomp import Condition
+from expcomp.evaluation import Metric
+from expcomp.experiments import Experiment, ExperimentComparison, ExperimentConfig, ExperimentLoader
 
 # Load experiments from directory
 all_experiments = ExperimentLoader.from_directory(
