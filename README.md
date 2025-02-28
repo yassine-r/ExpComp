@@ -22,6 +22,10 @@ pip install expcomp
 ### Creating Dummy Experiments
 
 ```python
+
+import random
+import json
+
 def generate_experiment_config(exp_id):
     """Generate a dummy experiment configuration with random parameters."""
     model_architectures = ["ResNet50", "VGG16", "MobileNetV2", "EfficientNetB0", "DenseNet121"]
