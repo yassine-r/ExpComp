@@ -22,6 +22,7 @@ pip install expcomp
 ### Creating Dummy Experiments
 
 ```python
+import os
 import random
 import json
 
