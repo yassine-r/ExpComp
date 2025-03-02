@@ -5,6 +5,7 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List
 from expcomp.evaluation import Metric
+import wandb 
 
 from expcomp.experiments import ExperimentLoader
 from expcomp.experiments import ExperimentConfig
@@ -327,3 +328,176 @@ def test_custom_parser(multi_experiment_dir):
     # Check that the metric got the custom_flag
     for m in exp1.metrics:
         assert getattr(m, "custom_flag", False) is True
+
+
+
+
+######################
+
+
+from unittest.mock import MagicMock, patch
+import pandas as pd
+import pytest
+import json
+import yaml
+from pathlib import Path
+
+def test_load_from_wandb_basic(monkeypatch):
+    """
+    Test basic loading from wandb with 2 mock runs
+    """
+    # Mock wandb API and runs
+    mock_run1 = MagicMock()
+    mock_run1.id = "run1"
+    mock_run1.config = {"learning_rate": 0.01, "id": "run1"}
+    mock_run1.history.return_value = pd.DataFrame([
+        {"_step": 1, "accuracy": 0.8, "_runtime": 10},
+        {"_step": 2, "accuracy": 0.85, "_runtime": 20}
+    ])
+
+    mock_run2 = MagicMock()
+    mock_run2.id = "run2"
+    mock_run2.config = {"dropout": 0.5, "id": "run2"}
+    mock_run2.history.return_value = pd.DataFrame([
+        {"_step": 1, "loss": 1.2, "_timestamp": 1620000000}
+    ])
+
+    # Mock API
+    mock_api = MagicMock()
+    mock_api.runs.return_value = [mock_run1, mock_run2]
+    monkeypatch.setattr(wandb, "Api", lambda: mock_api)
+
+    # Test loading
+    experiments = ExperimentLoader.from_wandb(project="test_project")
+
+    # Verify results
+    assert len(experiments) == 2
+    
+    # Verify first experiment
+    exp1 = next(e for e in experiments if e.config.id == "run1")
+    assert exp1.config.learning_rate == 0.01
+    assert len(exp1.metrics) == 2  # 2 steps, 1 metric per step (excluding system metrics)
+    assert all(m.name == "accuracy" for m in exp1.metrics)
+    assert {m.value for m in exp1.metrics} == {0.8, 0.85}
+
+    # Verify second experiment
+    exp2 = next(e for e in experiments if e.config.id == "run2")
+    assert exp2.config.dropout == 0.5
+    assert len(exp2.metrics) == 1
+    assert exp2.metrics[0].name == "loss"
+
+def test_wandb_local_saving(tmp_path):
+    """
+    Test loading from wandb and saving to local directory
+    """
+    # Setup mock run
+    mock_run = MagicMock()
+    mock_run.id = "saved_run"
+    mock_run.config = {"epochs": 10, "id": "saved_run"}
+    mock_run.history.return_value = pd.DataFrame([
+        {"_step": 1, "f1_score": 0.75, "_system": 1}
+    ])
+
+    # Mock API
+    with patch.object(wandb, "Api") as mock_api:
+        mock_api.return_value.runs.return_value = [mock_run]
+
+        # Test with local saving
+        local_dir = tmp_path / "experiments"
+        experiments = ExperimentLoader.from_wandb(
+            project="save_test",
+            local_dir=local_dir,
+            config_file_name="config.yaml",
+            metrics_file_name="metrics.json"
+        )
+
+    # Verify directory structure
+    exp_dir = local_dir / "saved_run"
+    assert exp_dir.exists()
+    
+    # Verify config file
+    config_path = exp_dir / "config.yaml"
+    assert config_path.exists()
+    with open(config_path) as f:
+        config_data = yaml.safe_load(f)
+    assert config_data == {"epochs": 10, "id": "saved_run"}
+
+    # Verify metrics file
+    metrics_path = exp_dir / "metrics.json"
+    assert metrics_path.exists()
+    with open(metrics_path) as f:
+        metrics_data = json.load(f)
+    
+    assert len(metrics_data) == 1
+    assert metrics_data[0]["name"] == "f1_score"
+    assert metrics_data[0]["value"] == 0.75
+    assert "_system" not in metrics_data[0]  # Verify system metric exclusion
+
+def test_wandb_system_metric_exclusion():
+    """
+    Test that system metrics (starting with _) are excluded by default
+    """
+    mock_run = MagicMock()
+    mock_run.id = "sys_metrics_test"
+    mock_run.config = {}
+    mock_run.history.return_value = pd.DataFrame([
+        {"_step": 1, "_runtime": 10, "loss": 1.0},
+        {"_step": 2, "_runtime": 20, "loss": 0.5}
+    ])
+
+    with patch.object(wandb, "Api") as mock_api:
+        mock_api.return_value.runs.return_value = [mock_run]
+        experiments = ExperimentLoader.from_wandb(project="sys_metrics_test")
+
+    assert len(experiments) == 1
+    exp = experiments[0]
+    assert len(exp.metrics) == 2  # Two loss metrics
+    assert all(m.name == "loss" for m in exp.metrics)
+    assert all(m.step in {1, 2} for m in exp.metrics)
+
+def test_wandb_empty_metrics():
+    """
+    Test handling of runs with empty metrics
+    """
+    mock_run = MagicMock()
+    mock_run.id = "empty_metrics"
+    mock_run.config = {"model": "cnn"}
+    mock_run.history.return_value = pd.DataFrame()  # Empty metrics
+
+    with patch.object(wandb, "Api") as mock_api:
+        mock_api.return_value.runs.return_value = [mock_run]
+        experiments = ExperimentLoader.from_wandb(project="empty_metrics_test")
+
+    assert len(experiments) == 1
+    exp = experiments[0]
+    assert len(exp.metrics) == 0
+
+def test_wandb_custom_file_formats(tmp_path):
+    """
+    Test saving with different file formats (YAML/JSON)
+    """
+    mock_run = MagicMock()
+    mock_run.id = "format_test"
+    mock_run.config = {"batch_size": 32}
+    mock_run.history.return_value = pd.DataFrame([{"accuracy": 0.99}])
+
+    with patch.object(wandb, "Api") as mock_api:
+        mock_api.return_value.runs.return_value = [mock_run]
+        ExperimentLoader.from_wandb(
+            project="format_test",
+            local_dir=tmp_path,
+            config_file_name="config.yml",
+            metrics_file_name="metrics.yaml"
+        )
+
+    # Verify YAML config
+    config_path = tmp_path / "format_test" / "config.yml"
+    with open(config_path) as f:
+        config_data = yaml.safe_load(f)
+    assert config_data["batch_size"] == 32
+
+    # Verify YAML metrics
+    metrics_path = tmp_path / "format_test" / "metrics.yaml"
+    with open(metrics_path) as f:
+        metrics_data = yaml.safe_load(f)
+    assert metrics_data[0]["name"] == "accuracy"

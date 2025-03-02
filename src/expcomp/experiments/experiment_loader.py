@@ -6,6 +6,8 @@ from typing import List, Dict, Any, Optional, Union, Callable, Tuple
 from expcomp import logger
 from expcomp.evaluation import Metric
 
+import wandb
+
 from .experiment_config import ExperimentConfig
 from .experiment import Experiment
 
@@ -16,6 +18,111 @@ class ExperimentLoader:
     """
     A utility class to load experiments from various sources.
     """
+    
+    @staticmethod
+    def from_wandb(
+        project: str,
+        entity: Optional[str] = None,
+        filters: Optional[Dict] = None,
+        local_dir: Optional[Union[str, Path]] = None,
+        config_file_name: str = "config.json",
+        metrics_file_name: str = "metrics.json",
+        exclude_system_metrics: bool = True,
+        **kwargs,
+    ) -> List[Experiment]:
+        """
+        Load experiments from Weights & Biases (wandb).
+
+        Args:
+            project: Name of the wandb project.
+            entity: Name of the wandb entity (user or team).
+            filters: Filters to apply when fetching runs (e.g., {"tags": {"$in": ["experiment"]}}).
+            local_dir: Optional directory to store the experiments locally. If provided, saves config and metrics files.
+            config_file_name: Filename for saving config files.
+            metrics_file_name: Filename for saving metrics files.
+            exclude_system_metrics: Whether to exclude wandb system metrics (default: True).
+            **kwargs: Additional keyword arguments passed to the wandb.Api().runs() method.
+
+        Returns:
+            List of Experiment objects loaded from wandb.
+        """
+        api = wandb.Api()
+        project_path = f"{entity}/{project}" if entity else project
+        runs = api.runs(project_path, filters=filters, **kwargs)
+
+        experiments = []
+
+        for run in runs:
+            try:
+                logger.debug(f"Processing wandb run: {run.id}")
+
+                # Extract config
+                config = dict(run.config)
+
+                # Extract and process metrics history
+                history = run.history()
+                metrics_records = history.to_dict('records')
+
+                metrics_list = []
+                for record in metrics_records:
+                    step = record.get('_step', record.get('step', None))
+                    timestamp = record.get('_timestamp', None)
+                    for key, value in record.items():
+                        if exclude_system_metrics and key.startswith('_'):
+                            continue
+                        metric_dict = {
+                            'name': key,
+                            'value': value,
+                            'step': step,
+                            'timestamp': timestamp,
+                            'experiment_id': run.id
+                        }
+                        metrics_list.append(metric_dict)
+
+                # Save to local directory if requested
+                if local_dir is not None:
+                    exp_dir = Path(local_dir) / run.id
+                    exp_dir.mkdir(parents=True, exist_ok=True)
+
+                    # Save config
+                    config_path = exp_dir / config_file_name
+                    with open(config_path, 'w') as f:
+                        if config_path.suffix.lower() in ('.yaml', '.yml'):
+                            yaml.safe_dump(config, f, sort_keys=False)
+                        else:
+                            json.dump(config, f, indent=2)
+
+                    # Save metrics
+                    metrics_path = exp_dir / metrics_file_name
+                    with open(metrics_path, 'w') as f:
+                        if metrics_path.suffix.lower() in ('.yaml', '.yml'):
+                            yaml.safe_dump(metrics_list, f, sort_keys=False)
+                        else:
+                            json.dump(metrics_list, f, indent=2)
+
+                # Create ExperimentConfig
+                config_dict = config.copy()
+                config_dict['id'] = run.id
+                experiment_config = ExperimentConfig(**config_dict)
+
+                # Create Metric objects
+                metrics_objs = []
+                for metric_dict in metrics_list:
+                    metric_dict['experiment_id'] = run.id  # Ensure experiment_id is set
+                    metrics_objs.append(Metric.from_dict(metric_dict))
+
+                # Build Experiment
+                experiment = Experiment(config=experiment_config, metrics=metrics_objs)
+                experiments.append(experiment)
+
+                logger.debug(f"Processed wandb run {run.id} with {len(metrics_objs)} metrics")
+
+            except Exception as e:
+                logger.exception(f"Error loading run {run.id} from wandb: {e}")
+                continue
+
+        logger.info(f"Successfully loaded {len(experiments)} experiments from wandb project {project}")
+        return experiments
 
     @staticmethod
     def from_directory(

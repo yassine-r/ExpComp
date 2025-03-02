@@ -12,9 +12,10 @@ requires-python = ">=3.11"
 packages = [{include = "expcomp", from = "src"}]
 
 [tool.poetry.dependencies]
-pandas = ">=2.0.0"
 pyaml = ">=25.0.0"
 loguru = { version = "^0.7.3", python = ">=3.11,<4.0" }
+pandas = "^2.2.3"
+wandb = "^0.19.7"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.3.4"
