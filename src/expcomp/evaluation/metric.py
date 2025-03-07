@@ -13,7 +13,7 @@ class Metric:
     def __init__(
         self,
         experiment_id: Any,
-        name: str,
+        name: str = None,
         value: Optional[Union[float, int, List]] = None,
         **kwargs,
     ):
